@@ -1,0 +1,33 @@
+# ASH Code Owners
+# These owners are automatically requested for review
+
+# Default owners for everything
+* @lead-backend-engineer
+
+# Security-critical code requires Security Engineer review
+/ash-core/src/verification.rs @security-engineer @lead-backend-engineer
+/ash-core/src/proof.rs @security-engineer @lead-backend-engineer
+/ash-core/src/threat_tests.rs @security-engineer
+
+# Canonicalization requires Deterministic Systems Engineer
+/ash-core/src/canonicalization.rs @deterministic-engineer @lead-backend-engineer
+
+# SDK and API changes require DX Engineer
+/ash-node/ @dx-engineer
+/docs/ @dx-engineer @devrel
+
+# Security documentation requires Security Engineer approval
+/SECURITY.md @security-engineer @rnd-lead
+/docs/SECURITY_IMPLEMENTATION_GUIDE.md @security-engineer @rnd-lead
+
+# Protocol specification requires R&D Lead approval
+/docs/specs/ @rnd-lead
+
+# Test vectors require multiple reviewers
+/docs/vectors/ @deterministic-engineer @test-engineer
+
+# CI/CD and workflow changes require Lead Backend approval
+/.github/workflows/ @lead-backend-engineer @security-engineer
+
+# Architecture decisions require R&D Lead
+/ash-core/Cargo.toml @rnd-lead @lead-backend-engineer
