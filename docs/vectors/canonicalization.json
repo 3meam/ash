@@ -1,0 +1,30 @@
+{
+  "description": "Canonicalization test vectors",
+  "version": "1.0.0",
+  "vectors": [
+    {
+      "name": "simple_object",
+      "input": "{\"b\": 1, \"a\": 2}",
+      "expected": "{\"a\":2,\"b\":1}",
+      "notes": "Keys must be sorted alphabetically"
+    },
+    {
+      "name": "nested_object",
+      "input": "{\"z\": {\"b\": 1, \"a\": 2}, \"a\": 1}",
+      "expected": "{\"a\":1,\"z\":{\"a\":2,\"b\":1}}",
+      "notes": "Nested keys must also be sorted"
+    },
+    {
+      "name": "whitespace_removal",
+      "input": "{  \"a\" :  1  }",
+      "expected": "{\"a\":1}",
+      "notes": "All unnecessary whitespace removed"
+    },
+    {
+      "name": "unicode_normalization",
+      "input": "{\"cafe\\u0301\": 1}",
+      "expected": "{\"caf\\u00e9\":1}",
+      "notes": "Unicode must be NFC normalized"
+    }
+  ]
+}
