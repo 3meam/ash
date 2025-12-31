@@ -2,6 +2,8 @@
 
 Get up and running with ASH in 5 minutes.
 
+**Ash was developed by 3maem Co. | شركة عمائم**
+
 ## Installation
 
 ```bash
@@ -18,23 +20,19 @@ npm install @anthropic/ash-client-web
 
 ```typescript
 import express from 'express';
-import {
-  createContext,
-  ashMiddleware,
-  MemoryContextStore,  // Use RedisContextStore in production!
-} from '@anthropic/ash-server';
+import ash from '@anthropic/ash-server';
 
 const app = express();
 app.use(express.json());
 
-// Create a context store
-const store = new MemoryContextStore();
+// Create a context store (use ash.stores.Redis in production!)
+const store = new ash.stores.Memory();
 
 // Endpoint to issue contexts
 app.post('/ash/context', async (req, res) => {
   const { binding } = req.body;
 
-  const context = await createContext(store, {
+  const context = await ash.context.create(store, {
     binding,           // e.g., "POST /api/transfer"
     ttlMs: 30000,      // 30 seconds
     issueNonce: true,  // Optional: server-assisted mode
@@ -45,7 +43,7 @@ app.post('/ash/context', async (req, res) => {
 
 // Protected endpoint with ASH verification
 app.post('/api/transfer',
-  ashMiddleware(store, {
+  ash.middleware.express(store, {
     expectedBinding: 'POST /api/transfer',
     contentType: 'application/json',
   }),
@@ -62,7 +60,7 @@ app.listen(3000);
 ### 2. Client Setup (Browser)
 
 ```typescript
-import { ashFetch, createAshHeaders } from '@anthropic/ash-client-web';
+import ash from '@anthropic/ash-client-web';
 
 async function makeProtectedRequest(payload) {
   // Step 1: Get context from server
@@ -73,8 +71,8 @@ async function makeProtectedRequest(payload) {
   });
   const context = await contextResponse.json();
 
-  // Step 2: Make protected request with ashFetch
-  const response = await ashFetch('/api/transfer', {
+  // Step 2: Make protected request with ash.fetch
+  const response = await ash.fetch('/api/transfer', {
     context,
     payload,
     method: 'POST',
@@ -96,9 +94,9 @@ const result = await makeProtectedRequest({
 If you need more control:
 
 ```typescript
-import { createAshHeaders } from '@anthropic/ash-client-web';
+import ash from '@anthropic/ash-client-web';
 
-const headers = await createAshHeaders({
+const headers = await ash.createHeaders({
   context,
   payload: { amount: 100 },
   method: 'POST',
@@ -121,17 +119,17 @@ const response = await fetch('/api/transfer', {
 
 ```typescript
 import Fastify from 'fastify';
-import { ashPlugin, createContext, MemoryContextStore } from '@anthropic/ash-server';
+import ash from '@anthropic/ash-server';
 
 const fastify = Fastify();
-const store = new MemoryContextStore();
+const store = new ash.stores.Memory();
 
 // Register ASH plugin
-await fastify.register(ashPlugin, { store });
+await fastify.register(ash.middleware.fastify, { store });
 
 // Issue context
 fastify.post('/ash/context', async (request, reply) => {
-  const context = await createContext(store, {
+  const context = await ash.context.create(store, {
     binding: 'POST /api/transfer',
     ttlMs: 30000,
   });
@@ -152,7 +150,7 @@ await fastify.listen({ port: 3000 });
 
 ## Production Checklist
 
-- [ ] Use `RedisContextStore` or `SqlContextStore` instead of `MemoryContextStore`
+- [ ] Use `ash.stores.Redis` or `ash.stores.Sql` instead of `ash.stores.Memory`
 - [ ] Set appropriate TTL (recommended: 30-60 seconds)
 - [ ] Enable HTTPS
 - [ ] Consider rate limiting context issuance

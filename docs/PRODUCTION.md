@@ -1,5 +1,7 @@
 # ASH Protocol - Production Deployment Guide
 
+**Ash was developed by 3maem Co. | شركة عمائم**
+
 ## Prerequisites
 
 - Node.js 18+ (LTS recommended)
@@ -15,7 +17,7 @@ Best for: High throughput, horizontal scaling, automatic expiration.
 
 ```typescript
 import Redis from 'ioredis';
-import { RedisContextStore } from '@anthropic/ash-server';
+import ash from '@anthropic/ash-server';
 
 const redis = new Redis({
   host: process.env.REDIS_HOST,
@@ -24,7 +26,7 @@ const redis = new Redis({
   tls: process.env.REDIS_TLS === 'true' ? {} : undefined,
 });
 
-const store = new RedisContextStore({
+const store = new ash.stores.Redis({
   client: redis,
   keyPrefix: 'ash:ctx:',
 });
@@ -41,14 +43,14 @@ Best for: Existing PostgreSQL infrastructure, audit requirements.
 
 ```typescript
 import { Pool } from 'pg';
-import { SqlContextStore } from '@anthropic/ash-server';
+import ash from '@anthropic/ash-server';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
 });
 
-const store = new SqlContextStore({
+const store = new ash.stores.Sql({
   query: (sql, params) => pool.query(sql, params),
   tableName: 'ash_contexts',
 });
@@ -100,7 +102,7 @@ ASH_ENABLE_NONCE=true
 import express from 'express';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { createContext, ashMiddleware, RedisContextStore } from '@anthropic/ash-server';
+import ash from '@anthropic/ash-server';
 
 const app = express();
 
@@ -116,7 +118,7 @@ const contextLimiter = rateLimit({
 });
 
 // Context store
-const store = new RedisContextStore({ client: redis });
+const store = new ash.stores.Redis({ client: redis });
 
 // Context issuance endpoint
 app.post('/ash/context', contextLimiter, async (req, res) => {
@@ -129,7 +131,7 @@ app.post('/ash/context', contextLimiter, async (req, res) => {
       });
     }
 
-    const context = await createContext(store, {
+    const context = await ash.context.create(store, {
       binding,
       ttlMs: parseInt(process.env.ASH_DEFAULT_TTL_MS || '30000'),
       issueNonce: process.env.ASH_ENABLE_NONCE === 'true',
@@ -146,7 +148,7 @@ app.post('/ash/context', contextLimiter, async (req, res) => {
 
 // Protected endpoints
 app.post('/api/transfer',
-  ashMiddleware(store, { expectedBinding: 'POST /api/transfer' }),
+  ash.middleware.express(store, { expectedBinding: 'POST /api/transfer' }),
   transferHandler
 );
 ```
@@ -156,24 +158,24 @@ app.post('/api/transfer',
 ### Metrics to Track
 
 ```typescript
-import { AshError, ReplayDetectedError, IntegrityFailedError } from '@anthropic/ash-server';
+import ash from '@anthropic/ash-server';
 
 // Wrap verification with metrics
 async function verifyWithMetrics(store, req, options) {
   const start = Date.now();
 
   try {
-    await verifyRequest(store, req, options);
+    await ash.verify(store, req, options);
     metrics.increment('ash.verify.success');
     metrics.timing('ash.verify.duration', Date.now() - start);
   } catch (error) {
-    if (error instanceof ReplayDetectedError) {
+    if (error instanceof ash.errors.ReplayDetectedError) {
       metrics.increment('ash.verify.replay_detected');
       alerting.warn('Replay attack detected', { contextId: req.contextId });
-    } else if (error instanceof IntegrityFailedError) {
+    } else if (error instanceof ash.errors.IntegrityFailedError) {
       metrics.increment('ash.verify.integrity_failed');
       alerting.warn('Integrity check failed', { ip: req.ip });
-    } else if (error instanceof AshError) {
+    } else if (error instanceof ash.errors.AshError) {
       metrics.increment(`ash.verify.error.${error.code.toLowerCase()}`);
     }
     throw error;
@@ -229,10 +231,12 @@ ASH is designed for horizontal scaling:
 ## Health Checks
 
 ```typescript
+import ash from '@anthropic/ash-server';
+
 app.get('/health', async (req, res) => {
   try {
     // Test store connectivity
-    const testCtx = await createContext(store, {
+    const testCtx = await ash.context.create(store, {
       binding: 'GET /health',
       ttlMs: 1000,
     });
@@ -247,7 +251,7 @@ app.get('/health', async (req, res) => {
 
 ## Checklist
 
-- [ ] Using Redis or PostgreSQL (not MemoryContextStore)
+- [ ] Using `ash.stores.Redis` or `ash.stores.Sql` (not `ash.stores.Memory`)
 - [ ] HTTPS enabled
 - [ ] Rate limiting on context issuance
 - [ ] Appropriate TTL configured (30-60 seconds)

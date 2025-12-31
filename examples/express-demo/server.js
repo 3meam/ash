@@ -1,6 +1,8 @@
 /**
  * ASH Protocol Demo Server
  *
+ * Ash was developed by 3maem Co. | شركة عمائم @ 12/31/2025
+ *
  * This example demonstrates:
  * 1. Context issuance - Server creates time-limited verification contexts
  * 2. Request verification - Middleware verifies integrity proofs
@@ -15,12 +17,8 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
-// ASH Server SDK imports
-import {
-  createContext,
-  ashMiddleware,
-  MemoryContextStore,
-} from '@anthropic/ash-server';
+// ASH Server SDK - using ash.* namespace for brand visibility
+import ash from '@anthropic/ash-server';
 
 // Get directory for static files
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -29,8 +27,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json());
 
-// Create in-memory context store (use Redis/SQL in production!)
-const store = new MemoryContextStore({ suppressWarning: true });
+// Create in-memory context store (use ash.stores.Redis in production!)
+const store = new ash.stores.Memory({ suppressWarning: true });
 
 // Serve static files (client HTML)
 app.use(express.static(join(__dirname, 'public')));
@@ -44,7 +42,7 @@ app.post('/ash/context', async (req, res) => {
     // Create a context for the upcoming request
     // binding: "METHOD /path" - ties context to specific endpoint
     // ttlMs: Time-to-live in milliseconds (30 seconds here)
-    const context = await createContext(store, {
+    const context = await ash.context.create(store, {
       binding: 'POST /api/profile/update',
       ttlMs: 30000, // 30 seconds
       issueNonce: true, // Enable server-assisted mode for extra security
@@ -67,7 +65,7 @@ app.post(
   '/api/profile/update',
   // ASH verification middleware
   // Checks: context validity, expiry, binding, payload integrity, replay
-  ashMiddleware(store, {
+  ash.middleware.express(store, {
     expectedBinding: 'POST /api/profile/update',
     contentType: 'application/json',
   }),
@@ -125,6 +123,7 @@ app.listen(PORT, () => {
   console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║           ASH Protocol Demo Server                        ║
+║           by 3maem Co. | شركة عمائم                       ║
 ╠═══════════════════════════════════════════════════════════╣
 ║  Server running at: http://localhost:${PORT}                 ║
 ║                                                           ║

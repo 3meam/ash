@@ -2,6 +2,8 @@
 
 **ASH (Authenticity & Stateless Hardening)** is a protocol for verifying HTTP request integrity, preventing tampering and replay attacks.
 
+**Ash was developed by 3maem Co. | شركة عمائم**
+
 ## Features
 
 - **Tamper Detection** - Cryptographic proof ensures payload integrity
@@ -31,14 +33,14 @@
 
 ```typescript
 import express from 'express';
-import { createContext, ashMiddleware, MemoryContextStore } from '@anthropic/ash-server';
+import ash from '@anthropic/ash-server';
 
 const app = express();
-const store = new MemoryContextStore();
+const store = new ash.stores.Memory();
 
 // Issue context endpoint
 app.post('/ash/context', async (req, res) => {
-  const ctx = await createContext(store, {
+  const ctx = await ash.context.create(store, {
     binding: 'POST /api/update',
     ttlMs: 30000,
   });
@@ -47,7 +49,7 @@ app.post('/ash/context', async (req, res) => {
 
 // Protected endpoint
 app.post('/api/update',
-  ashMiddleware(store, { expectedBinding: 'POST /api/update' }),
+  ash.middleware.express(store, { expectedBinding: 'POST /api/update' }),
   (req, res) => res.json({ success: true })
 );
 ```
@@ -55,13 +57,13 @@ app.post('/api/update',
 ### Client (Browser)
 
 ```typescript
-import { ashFetch } from '@anthropic/ash-client-web';
+import ash from '@anthropic/ash-client-web';
 
 // Get context from server
 const ctx = await fetch('/ash/context', { method: 'POST' }).then(r => r.json());
 
 // Make protected request
-const response = await ashFetch('/api/update', {
+const response = await ash.fetch('/api/update', {
   context: ctx,
   payload: { name: 'John' },
   method: 'POST',
