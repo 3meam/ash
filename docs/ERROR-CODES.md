@@ -1,5 +1,7 @@
 # ASH Protocol - Error Codes
 
+**Ash was developed by 3maem Co. | شركة عمائم**
+
 All ASH errors extend `AshError` and include an error code, message, and HTTP status.
 
 ## Error Reference
@@ -19,7 +21,7 @@ All ASH errors extend `AshError` and include an error code, message, and HTTP st
 
 ### InvalidContextError
 ```typescript
-throw new InvalidContextError();
+throw new ash.errors.InvalidContextError();
 // code: 'INVALID_CONTEXT'
 // message: 'Invalid or missing context'
 // httpStatus: 400
@@ -32,7 +34,7 @@ throw new InvalidContextError();
 
 ### ContextExpiredError
 ```typescript
-throw new ContextExpiredError();
+throw new ash.errors.ContextExpiredError();
 // code: 'CONTEXT_EXPIRED'
 // message: 'Context has expired'
 // httpStatus: 400
@@ -44,7 +46,7 @@ throw new ContextExpiredError();
 
 ### ReplayDetectedError
 ```typescript
-throw new ReplayDetectedError();
+throw new ash.errors.ReplayDetectedError();
 // code: 'REPLAY_DETECTED'
 // message: 'Context has already been used'
 // httpStatus: 400
@@ -57,7 +59,7 @@ throw new ReplayDetectedError();
 
 ### IntegrityFailedError
 ```typescript
-throw new IntegrityFailedError();
+throw new ash.errors.IntegrityFailedError();
 // code: 'INTEGRITY_FAILED'
 // message: 'Request integrity verification failed'
 // httpStatus: 400
@@ -70,7 +72,7 @@ throw new IntegrityFailedError();
 
 ### EndpointMismatchError
 ```typescript
-throw new EndpointMismatchError();
+throw new ash.errors.EndpointMismatchError();
 // code: 'ENDPOINT_MISMATCH'
 // message: 'Request endpoint does not match context binding'
 // httpStatus: 400
@@ -83,7 +85,7 @@ throw new EndpointMismatchError();
 
 ### UnsupportedContentTypeError
 ```typescript
-throw new UnsupportedContentTypeError('Details');
+throw new ash.errors.UnsupportedContentTypeError('Details');
 // code: 'UNSUPPORTED_CONTENT_TYPE'
 // message: 'Unsupported content type: Details'
 // httpStatus: 400
@@ -95,7 +97,7 @@ throw new UnsupportedContentTypeError('Details');
 
 ### CanonicalizationError
 ```typescript
-throw new CanonicalizationError('NaN not allowed');
+throw new ash.errors.CanonicalizationError('NaN not allowed');
 // code: 'CANONICALIZATION_ERROR'
 // message: 'Canonicalization failed: NaN not allowed'
 // httpStatus: 400
@@ -111,8 +113,10 @@ throw new CanonicalizationError('NaN not allowed');
 ### Server-Side (Express)
 
 ```typescript
+import ash from '@anthropic/ash-server';
+
 app.post('/api/endpoint',
-  ashMiddleware(store, options),
+  ash.middleware.express(store, options),
   (req, res) => {
     // Success path
   }
@@ -125,21 +129,17 @@ app.post('/api/endpoint',
 ### Server-Side (Custom)
 
 ```typescript
-import {
-  AshError,
-  InvalidContextError,
-  ReplayDetectedError,
-} from '@anthropic/ash-server';
+import ash from '@anthropic/ash-server';
 
 try {
-  await verifyRequest(store, req, options);
+  await ash.verify(store, req, options);
 } catch (error) {
-  if (error instanceof ReplayDetectedError) {
+  if (error instanceof ash.errors.ReplayDetectedError) {
     // Log potential attack
     logger.warn('Replay attack detected', { contextId });
   }
 
-  if (error instanceof AshError) {
+  if (error instanceof ash.errors.AshError) {
     return res.status(error.httpStatus).json({
       error: {
         code: error.code,
@@ -156,7 +156,9 @@ try {
 ### Client-Side
 
 ```typescript
-const response = await ashFetch('/api/endpoint', options);
+import ash from '@anthropic/ash-client-web';
+
+const response = await ash.fetch('/api/endpoint', options);
 
 if (!response.ok) {
   const error = await response.json();

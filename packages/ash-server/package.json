@@ -12,7 +12,9 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --clean",
     "test": "vitest run",
@@ -27,15 +29,19 @@
     "express": "^4.18.2",
     "fastify": "^4.24.0",
     "tsup": "^8.0.0",
-    "vitest": "^1.0.0"
+    "vitest": "^4.0.16"
   },
   "peerDependencies": {
     "express": "^4.18.0",
     "fastify": "^4.0.0"
   },
   "peerDependenciesMeta": {
-    "express": { "optional": true },
-    "fastify": { "optional": true }
+    "express": {
+      "optional": true
+    },
+    "fastify": {
+      "optional": true
+    }
   },
   "keywords": [
     "ash",

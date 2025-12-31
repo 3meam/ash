@@ -1,5 +1,7 @@
 # ASH Protocol - Security Guide
 
+**Ash was developed by 3maem Co. | شركة عمائم**
+
 ## Threat Model
 
 ASH protects against the following threats:
@@ -24,25 +26,27 @@ ASH protects against the following threats:
 ### 1. Use Production-Ready Stores
 
 ```typescript
+import ash from '@anthropic/ash-server';
+
 // BAD - Not safe for production
-const store = new MemoryContextStore();
+const store = new ash.stores.Memory();
 
 // GOOD - Atomic operations across instances
-const store = new RedisContextStore({ client: redis });
+const store = new ash.stores.Redis({ client: redis });
 // OR
-const store = new SqlContextStore({ query: pool.query });
+const store = new ash.stores.Sql({ query: pool.query });
 ```
 
 ### 2. Set Appropriate TTL
 
 ```typescript
 // BAD - Too long, increases replay window
-const ctx = await createContext(store, {
+const ctx = await ash.context.create(store, {
   ttlMs: 3600000, // 1 hour
 });
 
 // GOOD - Short-lived contexts
-const ctx = await createContext(store, {
+const ctx = await ash.context.create(store, {
   ttlMs: 30000, // 30 seconds
 });
 ```
@@ -51,7 +55,7 @@ const ctx = await createContext(store, {
 
 ```typescript
 // For high-value operations, use nonces
-const ctx = await createContext(store, {
+const ctx = await ash.context.create(store, {
   binding: 'POST /api/transfer',
   ttlMs: 30000,
   issueNonce: true, // Server issues nonce
@@ -63,7 +67,7 @@ const ctx = await createContext(store, {
 ```typescript
 // Ensure binding matches exactly
 app.post('/api/transfer',
-  ashMiddleware(store, {
+  ash.middleware.express(store, {
     expectedBinding: 'POST /api/transfer', // Must match context binding
   }),
   handler
@@ -87,7 +91,7 @@ console.log('Request verified successfully');
 ```typescript
 // Errors don't leak internal details
 catch (error) {
-  if (error instanceof AshError) {
+  if (error instanceof ash.errors.AshError) {
     // Safe to return to client
     res.status(error.httpStatus).json({
       code: error.code,
@@ -102,11 +106,11 @@ catch (error) {
 ASH uses constant-time comparison for proofs to prevent timing attacks:
 
 ```typescript
-// Internal implementation uses Node's crypto.timingSafeEqual
-import { timingSafeCompare } from '@anthropic/ash-core';
+import ash from '@anthropic/ash-core';
 
+// Internal implementation uses Node's crypto.timingSafeEqual
 // Safe comparison - takes same time regardless of where mismatch occurs
-const isValid = timingSafeCompare(expectedProof, providedProof);
+const isValid = ash.compare.safe(expectedProof, providedProof);
 ```
 
 ## Context ID Security

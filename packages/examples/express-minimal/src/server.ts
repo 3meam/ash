@@ -1,6 +1,8 @@
 /**
  * ASH Protocol - Minimal Express Example
  *
+ * Ash was developed by 3maem Co. | شركة عمائم @ 12/31/2025
+ *
  * Demonstrates:
  * - Context issuance endpoint
  * - Protected endpoint with ASH middleware
@@ -11,12 +13,9 @@
 import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import {
-  createContext,
-  ashMiddleware,
-  MemoryContextStore,
-  normalizeBinding,
-} from '@anthropic/ash-server';
+
+// ASH Server SDK - using ash.* namespace for brand visibility
+import ash from '@anthropic/ash-server';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -25,8 +24,8 @@ const app = express();
 app.use(express.json());
 app.use(express.static(join(__dirname, '../public')));
 
-// Initialize context store (use Redis/SQL in production!)
-const store = new MemoryContextStore({ suppressWarning: true });
+// Initialize context store (use ash.stores.Redis or ash.stores.Sql in production!)
+const store = new ash.stores.Memory({ suppressWarning: true });
 
 // ============================================
 // Context Issuance Endpoint
@@ -41,7 +40,7 @@ app.post('/ash/context', async (req, res) => {
     // Default binding if not specified
     const binding = action ?? 'POST /api/profile/update';
 
-    const ctx = await createContext(store, {
+    const ctx = await ash.context.create(store, {
       binding,
       ttlMs: 30_000, // 30 seconds
       mode: 'balanced',
@@ -64,7 +63,7 @@ const PROFILE_BINDING = 'POST /api/profile/update';
 
 app.post(
   '/api/profile/update',
-  ashMiddleware(store, { expectedBinding: PROFILE_BINDING }),
+  ash.middleware.express(store, { expectedBinding: PROFILE_BINDING }),
   (req, res) => {
     // If we reach here, the request has been verified:
     // - Valid context
@@ -92,7 +91,7 @@ const TRANSFER_BINDING = 'POST /api/transfer';
 
 app.post(
   '/api/transfer',
-  ashMiddleware(store, { expectedBinding: TRANSFER_BINDING }),
+  ash.middleware.express(store, { expectedBinding: TRANSFER_BINDING }),
   (req, res) => {
     const { to, amount } = req.body as { to?: string; amount?: number };
 

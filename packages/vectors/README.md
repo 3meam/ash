@@ -1,5 +1,7 @@
 # ASH Test Vectors
 
+**Ash was developed by 3maem Co. | شركة عمائم**
+
 This package contains test vectors for validating ASH protocol implementations.
 
 ## Vector Files
@@ -40,12 +42,12 @@ Each vector file follows a consistent structure:
 
 ```typescript
 import jsonVectors from './canonicalization.json.vectors.json';
-import { canonicalizeJson } from '@ash/core';
+import ash from '@anthropic/ash-core';
 
 describe('JSON Canonicalization', () => {
   jsonVectors.vectors.forEach(vector => {
     it(vector.description, () => {
-      const result = canonicalizeJson(vector.input);
+      const result = ash.canonicalize.json(vector.input);
       expect(result).toBe(vector.expected);
     });
   });
@@ -58,14 +60,14 @@ Some vector files include `reject_vectors` for testing error cases:
 
 ```typescript
 import jsonVectors from './canonicalization.json.vectors.json';
-import { canonicalizeJson, CanonicalizationError } from '@ash/core';
+import ash from '@anthropic/ash-core';
 
 describe('JSON Canonicalization - Rejections', () => {
   jsonVectors.reject_vectors?.forEach(vector => {
     it(vector.description, () => {
       // These should throw CanonicalizationError
-      expect(() => canonicalizeJson(vector.input))
-        .toThrow(CanonicalizationError);
+      expect(() => ash.canonicalize.json(vector.input))
+        .toThrow(ash.errors.CanonicalizationError);
     });
   });
 });
