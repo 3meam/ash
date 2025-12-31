@@ -39,6 +39,7 @@ __export(index_exports, {
   createContext: () => createContext,
   createContextManager: () => createContextManager,
   createVerifier: () => createVerifier,
+  default: () => index_default,
   verifyRequest: () => verifyRequest
 });
 module.exports = __toCommonJS(index_exports);
@@ -432,6 +433,54 @@ var SqlContextStore = class {
     };
   }
 };
+
+// src/index.ts
+var import_ash_core5 = require("@anthropic/ash-core");
+var ash = {
+  /** Version of the ASH protocol */
+  version: "1.0.0",
+  /** Context management */
+  context: {
+    /** Create a new context */
+    create: createContext,
+    /** Create a context manager */
+    createManager: createContextManager
+  },
+  /** Verify a request */
+  verify: verifyRequest,
+  /** Create a reusable verifier */
+  createVerifier,
+  /** Middleware for web frameworks */
+  middleware: {
+    /** Express.js middleware */
+    express: ashMiddleware,
+    /** Express.js error handler */
+    expressErrorHandler: ashErrorHandler,
+    /** Fastify plugin */
+    fastify: ashPlugin
+  },
+  /** Context stores */
+  stores: {
+    /** In-memory store (development only) */
+    Memory: MemoryContextStore,
+    /** Redis store (production) */
+    Redis: RedisContextStore,
+    /** SQL store (production) */
+    Sql: SqlContextStore
+  },
+  /** Error classes */
+  errors: {
+    AshError: import_ash_core5.AshError,
+    InvalidContextError: import_ash_core5.InvalidContextError,
+    ContextExpiredError: import_ash_core5.ContextExpiredError,
+    ReplayDetectedError: import_ash_core5.ReplayDetectedError,
+    IntegrityFailedError: import_ash_core5.IntegrityFailedError,
+    EndpointMismatchError: import_ash_core5.EndpointMismatchError,
+    UnsupportedContentTypeError: import_ash_core5.UnsupportedContentTypeError,
+    CanonicalizationError: import_ash_core5.CanonicalizationError
+  }
+};
+var index_default = ash;
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   ASH_ERROR_HTTP_STATUS,

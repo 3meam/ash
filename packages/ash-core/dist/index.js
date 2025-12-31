@@ -34,6 +34,7 @@ __export(index_exports, {
   buildProof: () => buildProof,
   canonicalizeJson: () => canonicalizeJson,
   canonicalizeUrlEncoded: () => canonicalizeUrlEncoded,
+  default: () => index_default,
   normalizeBinding: () => normalizeBinding,
   timingSafeCompare: () => timingSafeCompare,
   timingSafeCompareBuffers: () => timingSafeCompareBuffers
@@ -338,6 +339,47 @@ function timingSafeCompareBuffers(a, b) {
   }
   return (0, import_crypto2.timingSafeEqual)(a, b);
 }
+
+// src/index.ts
+var ash = {
+  /** Version of the ASH protocol */
+  version: "1.0.0",
+  /** Canonicalization functions */
+  canonicalize: {
+    /** Canonicalize JSON data */
+    json: canonicalizeJson,
+    /** Canonicalize URL-encoded data */
+    urlEncoded: canonicalizeUrlEncoded,
+    /** Normalize HTTP binding (method + path) */
+    binding: normalizeBinding
+  },
+  /** Proof generation functions */
+  proof: {
+    /** Build a cryptographic proof */
+    build: buildProof,
+    /** Decode Base64URL string */
+    decode: base64UrlDecode
+  },
+  /** Secure comparison functions */
+  compare: {
+    /** Timing-safe string comparison */
+    safe: timingSafeCompare,
+    /** Timing-safe buffer comparison */
+    safeBuffers: timingSafeCompareBuffers
+  },
+  /** Error classes */
+  errors: {
+    AshError,
+    InvalidContextError,
+    ContextExpiredError,
+    ReplayDetectedError,
+    IntegrityFailedError,
+    EndpointMismatchError,
+    UnsupportedContentTypeError,
+    CanonicalizationError
+  }
+};
+var index_default = ash;
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   ASH_ERROR_HTTP_STATUS,

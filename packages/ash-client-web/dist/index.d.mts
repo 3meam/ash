@@ -1,4 +1,4 @@
-import { BuildProofInput, ContextPublicInfo } from '@anthropic/ash-core';
+import { BuildProofInput, ContextPublicInfo, canonicalizeJson, canonicalizeUrlEncoded, normalizeBinding } from '@anthropic/ash-core';
 export { AshMode, BuildProofInput, ContextPublicInfo, canonicalizeJson, canonicalizeUrlEncoded, normalizeBinding } from '@anthropic/ash-core';
 
 /**
@@ -66,4 +66,52 @@ declare function createAshHeaders(options: AshFetchOptions): Promise<Record<stri
  */
 declare function ashFetch(url: string, options: AshFetchOptions): Promise<Response>;
 
-export { type AshFetchOptions, ashFetch, buildProof, createAshHeaders };
+/**
+ * ASH Protocol Client SDK
+ *
+ * Browser and Node.js compatible client for ASH protocol.
+ *
+ * Ash was developed by 3maem Co. | شركة عمائم @ 12/31/2025
+ *
+ * @packageDocumentation
+ * @module @anthropic/ash-client-web
+ */
+
+/**
+ * ASH Client Namespace
+ *
+ * All ASH client functionality accessible via `ash.` prefix.
+ *
+ * @example
+ * ```typescript
+ * import ash from '@anthropic/ash-client-web';
+ *
+ * const ctx = await fetch('/ash/context').then(r => r.json());
+ * const proof = await ash.proof.build({ context: ctx, payload, method: 'POST', path: '/api' });
+ * const response = await ash.fetch('/api', { context: ctx, payload, method: 'POST', path: '/api' });
+ * ```
+ */
+declare const ash: {
+    /** Version of the ASH protocol */
+    readonly version: "1.0.0";
+    /** Proof generation */
+    readonly proof: {
+        /** Build a cryptographic proof */
+        readonly build: typeof buildProof;
+    };
+    /** Create ASH headers for a request */
+    readonly createHeaders: typeof createAshHeaders;
+    /** Fetch wrapper with automatic ASH headers */
+    readonly fetch: typeof ashFetch;
+    /** Canonicalization functions */
+    readonly canonicalize: {
+        /** Canonicalize JSON data */
+        readonly json: typeof canonicalizeJson;
+        /** Canonicalize URL-encoded data */
+        readonly urlEncoded: typeof canonicalizeUrlEncoded;
+        /** Normalize HTTP binding (method + path) */
+        readonly binding: typeof normalizeBinding;
+    };
+};
+
+export { type AshFetchOptions, ashFetch, buildProof, createAshHeaders, ash as default };

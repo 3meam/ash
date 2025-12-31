@@ -93,11 +93,37 @@ async function ashFetch(url, options) {
     body: JSON.stringify(payload)
   });
 }
+
+// src/index.ts
+var ash = {
+  /** Version of the ASH protocol */
+  version: "1.0.0",
+  /** Proof generation */
+  proof: {
+    /** Build a cryptographic proof */
+    build: buildProof
+  },
+  /** Create ASH headers for a request */
+  createHeaders: createAshHeaders,
+  /** Fetch wrapper with automatic ASH headers */
+  fetch: ashFetch,
+  /** Canonicalization functions */
+  canonicalize: {
+    /** Canonicalize JSON data */
+    json: canonicalizeJson,
+    /** Canonicalize URL-encoded data */
+    urlEncoded: canonicalizeUrlEncoded,
+    /** Normalize HTTP binding (method + path) */
+    binding: normalizeBinding
+  }
+};
+var index_default = ash;
 export {
   ashFetch,
   buildProof,
   canonicalizeJson,
   canonicalizeUrlEncoded,
   createAshHeaders,
+  index_default as default,
   normalizeBinding
 };

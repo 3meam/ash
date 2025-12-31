@@ -35,6 +35,7 @@ __export(index_exports, {
   canonicalizeJson: () => import_ash_core.canonicalizeJson,
   canonicalizeUrlEncoded: () => import_ash_core.canonicalizeUrlEncoded,
   createAshHeaders: () => createAshHeaders,
+  default: () => index_default,
   normalizeBinding: () => import_ash_core.normalizeBinding
 });
 module.exports = __toCommonJS(index_exports);
@@ -130,6 +131,31 @@ async function ashFetch(url, options) {
     body: JSON.stringify(payload)
   });
 }
+
+// src/index.ts
+var ash = {
+  /** Version of the ASH protocol */
+  version: "1.0.0",
+  /** Proof generation */
+  proof: {
+    /** Build a cryptographic proof */
+    build: buildProof
+  },
+  /** Create ASH headers for a request */
+  createHeaders: createAshHeaders,
+  /** Fetch wrapper with automatic ASH headers */
+  fetch: ashFetch,
+  /** Canonicalization functions */
+  canonicalize: {
+    /** Canonicalize JSON data */
+    json: import_ash_core.canonicalizeJson,
+    /** Canonicalize URL-encoded data */
+    urlEncoded: import_ash_core.canonicalizeUrlEncoded,
+    /** Normalize HTTP binding (method + path) */
+    binding: import_ash_core.normalizeBinding
+  }
+};
+var index_default = ash;
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   ashFetch,

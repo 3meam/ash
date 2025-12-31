@@ -296,6 +296,47 @@ function timingSafeCompareBuffers(a, b) {
   }
   return timingSafeEqual(a, b);
 }
+
+// src/index.ts
+var ash = {
+  /** Version of the ASH protocol */
+  version: "1.0.0",
+  /** Canonicalization functions */
+  canonicalize: {
+    /** Canonicalize JSON data */
+    json: canonicalizeJson,
+    /** Canonicalize URL-encoded data */
+    urlEncoded: canonicalizeUrlEncoded,
+    /** Normalize HTTP binding (method + path) */
+    binding: normalizeBinding
+  },
+  /** Proof generation functions */
+  proof: {
+    /** Build a cryptographic proof */
+    build: buildProof,
+    /** Decode Base64URL string */
+    decode: base64UrlDecode
+  },
+  /** Secure comparison functions */
+  compare: {
+    /** Timing-safe string comparison */
+    safe: timingSafeCompare,
+    /** Timing-safe buffer comparison */
+    safeBuffers: timingSafeCompareBuffers
+  },
+  /** Error classes */
+  errors: {
+    AshError,
+    InvalidContextError,
+    ContextExpiredError,
+    ReplayDetectedError,
+    IntegrityFailedError,
+    EndpointMismatchError,
+    UnsupportedContentTypeError,
+    CanonicalizationError
+  }
+};
+var index_default = ash;
 export {
   ASH_ERROR_HTTP_STATUS,
   ASH_ERROR_MESSAGES,
@@ -311,6 +352,7 @@ export {
   buildProof,
   canonicalizeJson,
   canonicalizeUrlEncoded,
+  index_default as default,
   normalizeBinding,
   timingSafeCompare,
   timingSafeCompareBuffers

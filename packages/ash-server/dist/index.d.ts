@@ -1,4 +1,4 @@
-import { AshMode, SupportedContentType, StoredContext, ContextPublicInfo } from '@anthropic/ash-core';
+import { StoredContext, AshMode, SupportedContentType, ContextPublicInfo, AshError, InvalidContextError, ContextExpiredError, ReplayDetectedError, IntegrityFailedError, EndpointMismatchError, UnsupportedContentTypeError, CanonicalizationError } from '@anthropic/ash-core';
 export { ASH_ERROR_HTTP_STATUS, ASH_ERROR_MESSAGES, AshError, AshErrorCode, AshMode, CanonicalizationError, ContextExpiredError, ContextPublicInfo, EndpointMismatchError, IntegrityFailedError, InvalidContextError, ReplayDetectedError, StoredContext, SupportedContentType, UnsupportedContentTypeError } from '@anthropic/ash-core';
 
 /**
@@ -338,4 +338,74 @@ declare class SqlContextStore implements ContextStore {
     private rowToContext;
 }
 
-export { type AshFastifyPluginOptions, type ConsumeResult, type ContextStore, type CreateContextOptions, type ExpressMiddlewareOptions, type ExpressNextFunction, type ExpressRequest, type ExpressResponse, MemoryContextStore, type RedisClient, RedisContextStore, type RedisContextStoreOptions, SqlContextStore, type SqlContextStoreOptions, type SqlQuery, type VerifyOptions, ashErrorHandler, ashMiddleware, ashPlugin, createContext, createContextManager, createVerifier, verifyRequest };
+/**
+ * ASH Protocol Server SDK
+ *
+ * Server-side context management and request verification.
+ *
+ * Ash was developed by 3maem Co. | شركة عمائم @ 12/31/2025
+ *
+ * @packageDocumentation
+ * @module @anthropic/ash-server
+ */
+
+/**
+ * ASH Server Namespace
+ *
+ * All ASH server functionality accessible via `ash.` prefix.
+ *
+ * @example
+ * ```typescript
+ * import ash from '@anthropic/ash-server';
+ *
+ * const store = new ash.stores.Memory();
+ * const ctx = await ash.context.create(store, { binding: 'POST /api', ttlMs: 30000 });
+ * await ash.verify(store, req, { expectedBinding: 'POST /api' });
+ * ```
+ */
+declare const ash: {
+    /** Version of the ASH protocol */
+    readonly version: "1.0.0";
+    /** Context management */
+    readonly context: {
+        /** Create a new context */
+        readonly create: typeof createContext;
+        /** Create a context manager */
+        readonly createManager: typeof createContextManager;
+    };
+    /** Verify a request */
+    readonly verify: typeof verifyRequest;
+    /** Create a reusable verifier */
+    readonly createVerifier: typeof createVerifier;
+    /** Middleware for web frameworks */
+    readonly middleware: {
+        /** Express.js middleware */
+        readonly express: typeof ashMiddleware;
+        /** Express.js error handler */
+        readonly expressErrorHandler: typeof ashErrorHandler;
+        /** Fastify plugin */
+        readonly fastify: typeof ashPlugin;
+    };
+    /** Context stores */
+    readonly stores: {
+        /** In-memory store (development only) */
+        readonly Memory: typeof MemoryContextStore;
+        /** Redis store (production) */
+        readonly Redis: typeof RedisContextStore;
+        /** SQL store (production) */
+        readonly Sql: typeof SqlContextStore;
+    };
+    /** Error classes */
+    readonly errors: {
+        readonly AshError: typeof AshError;
+        readonly InvalidContextError: typeof InvalidContextError;
+        readonly ContextExpiredError: typeof ContextExpiredError;
+        readonly ReplayDetectedError: typeof ReplayDetectedError;
+        readonly IntegrityFailedError: typeof IntegrityFailedError;
+        readonly EndpointMismatchError: typeof EndpointMismatchError;
+        readonly UnsupportedContentTypeError: typeof UnsupportedContentTypeError;
+        readonly CanonicalizationError: typeof CanonicalizationError;
+    };
+};
+
+export { type AshFastifyPluginOptions, type ConsumeResult, type ContextStore, type CreateContextOptions, type ExpressMiddlewareOptions, type ExpressNextFunction, type ExpressRequest, type ExpressResponse, MemoryContextStore, type RedisClient, RedisContextStore, type RedisContextStoreOptions, SqlContextStore, type SqlContextStoreOptions, type SqlQuery, type VerifyOptions, ashErrorHandler, ashMiddleware, ashPlugin, createContext, createContextManager, createVerifier, ash as default, verifyRequest };

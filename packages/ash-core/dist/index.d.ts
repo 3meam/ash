@@ -224,4 +224,68 @@ declare function timingSafeCompare(a: string, b: string): boolean;
  */
 declare function timingSafeCompareBuffers(a: Buffer, b: Buffer): boolean;
 
-export { ASH_ERROR_HTTP_STATUS, ASH_ERROR_MESSAGES, AshError, type AshErrorCode, type AshMode, type BuildProofInput, CanonicalizationError, ContextExpiredError, type ContextPublicInfo, EndpointMismatchError, type HttpMethod, IntegrityFailedError, InvalidContextError, ReplayDetectedError, type StoredContext, type SupportedContentType, UnsupportedContentTypeError, base64UrlDecode, buildProof, canonicalizeJson, canonicalizeUrlEncoded, normalizeBinding, timingSafeCompare, timingSafeCompareBuffers };
+/**
+ * ASH Protocol Core
+ *
+ * Deterministic integrity verification for web requests.
+ *
+ * Ash was developed by 3maem Co. | شركة عمائم @ 12/31/2025
+ *
+ * @packageDocumentation
+ * @module @anthropic/ash-core
+ */
+
+/**
+ * ASH Core Namespace
+ *
+ * All ASH functionality accessible via `ash.` prefix.
+ *
+ * @example
+ * ```typescript
+ * import ash from '@anthropic/ash-core';
+ *
+ * const canonical = ash.canonicalize.json({ name: 'test' });
+ * const proof = await ash.proof.build({ ... });
+ * const isEqual = ash.compare.safe(a, b);
+ * ```
+ */
+declare const ash: {
+    /** Version of the ASH protocol */
+    readonly version: "1.0.0";
+    /** Canonicalization functions */
+    readonly canonicalize: {
+        /** Canonicalize JSON data */
+        readonly json: typeof canonicalizeJson;
+        /** Canonicalize URL-encoded data */
+        readonly urlEncoded: typeof canonicalizeUrlEncoded;
+        /** Normalize HTTP binding (method + path) */
+        readonly binding: typeof normalizeBinding;
+    };
+    /** Proof generation functions */
+    readonly proof: {
+        /** Build a cryptographic proof */
+        readonly build: typeof buildProof;
+        /** Decode Base64URL string */
+        readonly decode: typeof base64UrlDecode;
+    };
+    /** Secure comparison functions */
+    readonly compare: {
+        /** Timing-safe string comparison */
+        readonly safe: typeof timingSafeCompare;
+        /** Timing-safe buffer comparison */
+        readonly safeBuffers: typeof timingSafeCompareBuffers;
+    };
+    /** Error classes */
+    readonly errors: {
+        readonly AshError: typeof AshError;
+        readonly InvalidContextError: typeof InvalidContextError;
+        readonly ContextExpiredError: typeof ContextExpiredError;
+        readonly ReplayDetectedError: typeof ReplayDetectedError;
+        readonly IntegrityFailedError: typeof IntegrityFailedError;
+        readonly EndpointMismatchError: typeof EndpointMismatchError;
+        readonly UnsupportedContentTypeError: typeof UnsupportedContentTypeError;
+        readonly CanonicalizationError: typeof CanonicalizationError;
+    };
+};
+
+export { ASH_ERROR_HTTP_STATUS, ASH_ERROR_MESSAGES, AshError, type AshErrorCode, type AshMode, type BuildProofInput, CanonicalizationError, ContextExpiredError, type ContextPublicInfo, EndpointMismatchError, type HttpMethod, IntegrityFailedError, InvalidContextError, ReplayDetectedError, type StoredContext, type SupportedContentType, UnsupportedContentTypeError, base64UrlDecode, buildProof, canonicalizeJson, canonicalizeUrlEncoded, ash as default, normalizeBinding, timingSafeCompare, timingSafeCompareBuffers };

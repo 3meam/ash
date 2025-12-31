@@ -411,6 +411,63 @@ var SqlContextStore = class {
     };
   }
 };
+
+// src/index.ts
+import {
+  AshError as AshError4,
+  InvalidContextError as InvalidContextError3,
+  ContextExpiredError as ContextExpiredError3,
+  ReplayDetectedError as ReplayDetectedError3,
+  IntegrityFailedError as IntegrityFailedError3,
+  EndpointMismatchError as EndpointMismatchError3,
+  UnsupportedContentTypeError as UnsupportedContentTypeError3,
+  CanonicalizationError as CanonicalizationError2
+} from "@anthropic/ash-core";
+var ash = {
+  /** Version of the ASH protocol */
+  version: "1.0.0",
+  /** Context management */
+  context: {
+    /** Create a new context */
+    create: createContext,
+    /** Create a context manager */
+    createManager: createContextManager
+  },
+  /** Verify a request */
+  verify: verifyRequest,
+  /** Create a reusable verifier */
+  createVerifier,
+  /** Middleware for web frameworks */
+  middleware: {
+    /** Express.js middleware */
+    express: ashMiddleware,
+    /** Express.js error handler */
+    expressErrorHandler: ashErrorHandler,
+    /** Fastify plugin */
+    fastify: ashPlugin
+  },
+  /** Context stores */
+  stores: {
+    /** In-memory store (development only) */
+    Memory: MemoryContextStore,
+    /** Redis store (production) */
+    Redis: RedisContextStore,
+    /** SQL store (production) */
+    Sql: SqlContextStore
+  },
+  /** Error classes */
+  errors: {
+    AshError: AshError4,
+    InvalidContextError: InvalidContextError3,
+    ContextExpiredError: ContextExpiredError3,
+    ReplayDetectedError: ReplayDetectedError3,
+    IntegrityFailedError: IntegrityFailedError3,
+    EndpointMismatchError: EndpointMismatchError3,
+    UnsupportedContentTypeError: UnsupportedContentTypeError3,
+    CanonicalizationError: CanonicalizationError2
+  }
+};
+var index_default = ash;
 export {
   ASH_ERROR_HTTP_STATUS,
   ASH_ERROR_MESSAGES,
@@ -431,5 +488,6 @@ export {
   createContext,
   createContextManager,
   createVerifier,
+  index_default as default,
   verifyRequest
 };
