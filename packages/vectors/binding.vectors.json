@@ -1,0 +1,182 @@
+{
+  "name": "Binding Normalization Test Vectors",
+  "version": "1.0.0",
+  "description": "Test vectors for ASH binding normalization",
+  "specification": "DECISIONS.md Section 6",
+  "rules": {
+    "format": "METHOD + \" \" + normalized_path",
+    "method": "UPPERCASE",
+    "path": "Must start with /",
+    "queryString": "EXCLUDED",
+    "duplicateSlashes": "Collapsed to single /",
+    "trailingSlash": "Removed (except root /)"
+  },
+  "vectors": [
+    {
+      "id": "simple-post",
+      "description": "Simple POST binding",
+      "input": { "method": "POST", "path": "/api/test" },
+      "expected": "POST /api/test"
+    },
+    {
+      "id": "simple-get",
+      "description": "Simple GET binding",
+      "input": { "method": "GET", "path": "/api/users" },
+      "expected": "GET /api/users"
+    },
+    {
+      "id": "simple-put",
+      "description": "Simple PUT binding",
+      "input": { "method": "PUT", "path": "/api/settings" },
+      "expected": "PUT /api/settings"
+    },
+    {
+      "id": "simple-patch",
+      "description": "Simple PATCH binding",
+      "input": { "method": "PATCH", "path": "/api/users/123" },
+      "expected": "PATCH /api/users/123"
+    },
+    {
+      "id": "simple-delete",
+      "description": "Simple DELETE binding",
+      "input": { "method": "DELETE", "path": "/api/account" },
+      "expected": "DELETE /api/account"
+    },
+    {
+      "id": "root-path",
+      "description": "Root path (/ preserved)",
+      "input": { "method": "POST", "path": "/" },
+      "expected": "POST /"
+    },
+    {
+      "id": "trailing-slash-removed",
+      "description": "Trailing slash removed",
+      "input": { "method": "GET", "path": "/api/users/" },
+      "expected": "GET /api/users"
+    },
+    {
+      "id": "multiple-trailing-slashes",
+      "description": "Multiple trailing slashes removed",
+      "input": { "method": "GET", "path": "/api/users///" },
+      "expected": "GET /api/users"
+    },
+    {
+      "id": "double-slashes-collapsed",
+      "description": "Double slashes collapsed",
+      "input": { "method": "POST", "path": "/api//users//123" },
+      "expected": "POST /api/users/123"
+    },
+    {
+      "id": "many-slashes-collapsed",
+      "description": "Many slashes collapsed to single",
+      "input": { "method": "GET", "path": "/api////test////path" },
+      "expected": "GET /api/test/path"
+    },
+    {
+      "id": "query-string-stripped",
+      "description": "Query string stripped",
+      "input": { "method": "GET", "path": "/api/search?q=test&page=1" },
+      "expected": "GET /api/search"
+    },
+    {
+      "id": "query-string-complex",
+      "description": "Complex query string stripped",
+      "input": { "method": "POST", "path": "/api/users?filter=active&sort=name&order=asc" },
+      "expected": "POST /api/users"
+    },
+    {
+      "id": "query-only",
+      "description": "Path with only query string",
+      "input": { "method": "GET", "path": "/?q=test" },
+      "expected": "GET /"
+    },
+    {
+      "id": "fragment-stripped",
+      "description": "Fragment stripped",
+      "input": { "method": "GET", "path": "/api/docs#section1" },
+      "expected": "GET /api/docs"
+    },
+    {
+      "id": "query-and-fragment-stripped",
+      "description": "Both query and fragment stripped",
+      "input": { "method": "GET", "path": "/api/docs?page=1#section1" },
+      "expected": "GET /api/docs"
+    },
+    {
+      "id": "long-path",
+      "description": "Long nested path",
+      "input": { "method": "GET", "path": "/api/v1/organizations/123/teams/456/members/789" },
+      "expected": "GET /api/v1/organizations/123/teams/456/members/789"
+    },
+    {
+      "id": "path-with-numbers",
+      "description": "Path with numeric IDs",
+      "input": { "method": "DELETE", "path": "/api/items/12345" },
+      "expected": "DELETE /api/items/12345"
+    },
+    {
+      "id": "path-with-uuid",
+      "description": "Path with UUID",
+      "input": { "method": "GET", "path": "/api/users/550e8400-e29b-41d4-a716-446655440000" },
+      "expected": "GET /api/users/550e8400-e29b-41d4-a716-446655440000"
+    },
+    {
+      "id": "path-with-dashes",
+      "description": "Path with dashes",
+      "input": { "method": "GET", "path": "/api/user-profiles/my-profile" },
+      "expected": "GET /api/user-profiles/my-profile"
+    },
+    {
+      "id": "path-with-underscores",
+      "description": "Path with underscores",
+      "input": { "method": "GET", "path": "/api/user_data/get_all" },
+      "expected": "GET /api/user_data/get_all"
+    },
+    {
+      "id": "mixed-normalization",
+      "description": "Multiple normalizations combined",
+      "input": { "method": "POST", "path": "/api//users///123/?filter=active" },
+      "expected": "POST /api/users/123"
+    },
+    {
+      "id": "lowercase-method-normalized",
+      "description": "Lowercase method normalized to uppercase",
+      "input": { "method": "post", "path": "/api/test" },
+      "expected": "POST /api/test"
+    },
+    {
+      "id": "mixed-case-method",
+      "description": "Mixed case method normalized",
+      "input": { "method": "PoSt", "path": "/api/test" },
+      "expected": "POST /api/test"
+    }
+  ],
+  "invalid_vectors": [
+    {
+      "id": "missing-leading-slash",
+      "description": "Path missing leading slash",
+      "input": { "method": "GET", "path": "api/test" },
+      "error": "Path must start with /"
+    },
+    {
+      "id": "empty-path",
+      "description": "Empty path",
+      "input": { "method": "GET", "path": "" },
+      "error": "Path cannot be empty"
+    },
+    {
+      "id": "empty-method",
+      "description": "Empty method",
+      "input": { "method": "", "path": "/api/test" },
+      "error": "Method cannot be empty"
+    }
+  ],
+  "notes": [
+    "Binding format: METHOD + single space + normalized path",
+    "Methods are always uppercase",
+    "Paths must start with /",
+    "Query strings and fragments are removed",
+    "Consecutive slashes are collapsed",
+    "Trailing slashes are removed except for root path /"
+  ]
+}

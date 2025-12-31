@@ -1,0 +1,77 @@
+{
+  "name": "Proof Generation Test Vectors",
+  "version": "1.0.0",
+  "description": "Test vectors for ASH proof generation (ASH-PROOF-REF v1)",
+  "algorithm": "SHA-256",
+  "encoding": "Base64URL (no padding)",
+  "vectors": [
+    {
+      "id": "basic-proof",
+      "description": "Basic proof without nonce",
+      "input": {
+        "mode": "balanced",
+        "binding": "POST /api/profile/update",
+        "contextId": "abc123",
+        "canonicalPayload": "{\"name\":\"John\"}"
+      },
+      "proofInput": "ASHv1\nbalanced\nPOST /api/profile/update\nabc123\n{\"name\":\"John\"}",
+      "expected": "0WTgXZa_BB8Rm5ZTknIW2W6OXQxbGLJ3WL0pWUBsIUA"
+    },
+    {
+      "id": "proof-with-nonce",
+      "description": "Proof with server-issued nonce",
+      "input": {
+        "mode": "balanced",
+        "binding": "POST /api/transfer",
+        "contextId": "ctx-xyz-789",
+        "nonce": "nonce-456",
+        "canonicalPayload": "{\"amount\":100,\"to\":\"user@example.com\"}"
+      },
+      "proofInput": "ASHv1\nbalanced\nPOST /api/transfer\nctx-xyz-789\nnonce-456\n{\"amount\":100,\"to\":\"user@example.com\"}",
+      "expected": "gnyF7sOhNr9_gx-d8oxNx_VghO9Tqvzg3t-KB9ewR6U"
+    },
+    {
+      "id": "empty-payload",
+      "description": "Proof with empty object payload",
+      "input": {
+        "mode": "balanced",
+        "binding": "POST /api/ping",
+        "contextId": "empty-ctx",
+        "canonicalPayload": "{}"
+      },
+      "proofInput": "ASHv1\nbalanced\nPOST /api/ping\nempty-ctx\n{}",
+      "expected": "kyuUEtQ6swB4qPDl6eL4PKNm2KjmxQzG6V3Bc_vbRdY"
+    },
+    {
+      "id": "complex-payload",
+      "description": "Proof with complex nested payload",
+      "input": {
+        "mode": "balanced",
+        "binding": "PUT /api/settings",
+        "contextId": "settings-ctx-001",
+        "canonicalPayload": "{\"notifications\":{\"email\":true,\"sms\":false},\"theme\":\"dark\"}"
+      },
+      "proofInput": "ASHv1\nbalanced\nPUT /api/settings\nsettings-ctx-001\n{\"notifications\":{\"email\":true,\"sms\":false},\"theme\":\"dark\"}",
+      "expected": "C68L-uQDDLXU3NKQCpykr-TdG6EgYlvgNZ_8dbKA_Iw"
+    },
+    {
+      "id": "delete-request",
+      "description": "Proof for DELETE request",
+      "input": {
+        "mode": "balanced",
+        "binding": "DELETE /api/account",
+        "contextId": "delete-ctx-999",
+        "nonce": "confirm-nonce",
+        "canonicalPayload": "{\"confirm\":true}"
+      },
+      "proofInput": "ASHv1\nbalanced\nDELETE /api/account\ndelete-ctx-999\nconfirm-nonce\n{\"confirm\":true}",
+      "expected": "vmUzHpmEgQXLorGtUIFQcj6HKv4qV2rG5zHhPewZzoI"
+    }
+  ],
+  "notes": [
+    "Proof input is constructed as: ASHv1\\n + mode\\n + binding\\n + contextId\\n + [nonce\\n] + canonicalPayload",
+    "If nonce is present and non-empty, include nonce + newline before payload",
+    "All proofs use SHA-256 hash",
+    "Output encoding is Base64URL without padding (RFC 4648 Section 5)"
+  ]
+}

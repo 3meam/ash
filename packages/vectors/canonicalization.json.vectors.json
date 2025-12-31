@@ -1,0 +1,330 @@
+{
+  "name": "JSON Canonicalization Test Vectors",
+  "version": "1.0.0",
+  "description": "Test vectors for ASH JSON canonicalization (ASH-CANON v1)",
+  "specification": "DECISIONS.md Section 4",
+  "rules": {
+    "whitespace": "Minified (no whitespace)",
+    "keyOrdering": "Lexicographic ascending",
+    "arrayOrder": "Preserved",
+    "unicode": "NFC normalization",
+    "numbers": "No scientific notation, no trailing zeros, -0 → 0",
+    "unsupported": "REJECT: NaN, Infinity, undefined"
+  },
+  "vectors": [
+    {
+      "id": "empty-object",
+      "description": "Empty object",
+      "input": {},
+      "expected": "{}"
+    },
+    {
+      "id": "empty-array",
+      "description": "Empty array in object",
+      "input": {"arr": []},
+      "expected": "{\"arr\":[]}"
+    },
+    {
+      "id": "simple-object",
+      "description": "Simple object with sorted keys",
+      "input": {"b": 1, "a": 2},
+      "expected": "{\"a\":2,\"b\":1}"
+    },
+    {
+      "id": "three-keys-unsorted",
+      "description": "Three keys requiring sort",
+      "input": {"c": 3, "a": 1, "b": 2},
+      "expected": "{\"a\":1,\"b\":2,\"c\":3}"
+    },
+    {
+      "id": "nested-object",
+      "description": "Nested objects with sorted keys at all levels",
+      "input": {"z": {"b": 1, "a": 2}, "a": 1},
+      "expected": "{\"a\":1,\"z\":{\"a\":2,\"b\":1}}"
+    },
+    {
+      "id": "deeply-nested",
+      "description": "Deeply nested structure (4 levels)",
+      "input": {"a": {"b": {"c": {"d": 1}}}},
+      "expected": "{\"a\":{\"b\":{\"c\":{\"d\":1}}}}"
+    },
+    {
+      "id": "array-preserve-order",
+      "description": "Arrays must preserve element order",
+      "input": {"arr": [3, 1, 2]},
+      "expected": "{\"arr\":[3,1,2]}"
+    },
+    {
+      "id": "array-of-objects",
+      "description": "Array of objects - each object keys sorted",
+      "input": {"items": [{"z": 1, "a": 2}, {"y": 3, "b": 4}]},
+      "expected": "{\"items\":[{\"a\":2,\"z\":1},{\"b\":4,\"y\":3}]}"
+    },
+    {
+      "id": "array-mixed-types",
+      "description": "Array with mixed types",
+      "input": {"arr": [1, "two", true, null, {"x": 1}]},
+      "expected": "{\"arr\":[1,\"two\",true,null,{\"x\":1}]}"
+    },
+    {
+      "id": "nested-arrays",
+      "description": "Nested arrays",
+      "input": {"matrix": [[1, 2], [3, 4]]},
+      "expected": "{\"matrix\":[[1,2],[3,4]]}"
+    },
+    {
+      "id": "mixed-types",
+      "description": "All primitive types in one object",
+      "input": {"str": "hello", "num": 42, "bool": true, "nil": null},
+      "expected": "{\"bool\":true,\"nil\":null,\"num\":42,\"str\":\"hello\"}"
+    },
+    {
+      "id": "boolean-true",
+      "description": "Boolean true",
+      "input": {"flag": true},
+      "expected": "{\"flag\":true}"
+    },
+    {
+      "id": "boolean-false",
+      "description": "Boolean false",
+      "input": {"flag": false},
+      "expected": "{\"flag\":false}"
+    },
+    {
+      "id": "null-value",
+      "description": "Null value",
+      "input": {"value": null},
+      "expected": "{\"value\":null}"
+    },
+    {
+      "id": "number-integer",
+      "description": "Positive integer",
+      "input": {"n": 123},
+      "expected": "{\"n\":123}"
+    },
+    {
+      "id": "number-negative",
+      "description": "Negative integer",
+      "input": {"n": -456},
+      "expected": "{\"n\":-456}"
+    },
+    {
+      "id": "number-zero",
+      "description": "Zero",
+      "input": {"n": 0},
+      "expected": "{\"n\":0}"
+    },
+    {
+      "id": "number-decimal",
+      "description": "Decimal number",
+      "input": {"n": 3.14},
+      "expected": "{\"n\":3.14}"
+    },
+    {
+      "id": "number-negative-decimal",
+      "description": "Negative decimal",
+      "input": {"n": -2.5},
+      "expected": "{\"n\":-2.5}"
+    },
+    {
+      "id": "number-large-integer",
+      "description": "Large integer (within safe range)",
+      "input": {"n": 9007199254740991},
+      "expected": "{\"n\":9007199254740991}"
+    },
+    {
+      "id": "number-small-decimal",
+      "description": "Small decimal",
+      "input": {"n": 0.001},
+      "expected": "{\"n\":0.001}"
+    },
+    {
+      "id": "string-empty",
+      "description": "Empty string",
+      "input": {"s": ""},
+      "expected": "{\"s\":\"\"}"
+    },
+    {
+      "id": "string-simple",
+      "description": "Simple string",
+      "input": {"s": "hello"},
+      "expected": "{\"s\":\"hello\"}"
+    },
+    {
+      "id": "string-with-spaces",
+      "description": "String with spaces",
+      "input": {"s": "hello world"},
+      "expected": "{\"s\":\"hello world\"}"
+    },
+    {
+      "id": "string-escaping-newline",
+      "description": "String with newline",
+      "input": {"text": "line1\nline2"},
+      "expected": "{\"text\":\"line1\\nline2\"}"
+    },
+    {
+      "id": "string-escaping-tab",
+      "description": "String with tab",
+      "input": {"text": "col1\tcol2"},
+      "expected": "{\"text\":\"col1\\tcol2\"}"
+    },
+    {
+      "id": "string-escaping-quote",
+      "description": "String with double quotes",
+      "input": {"text": "say \"hello\""},
+      "expected": "{\"text\":\"say \\\"hello\\\"\"}"
+    },
+    {
+      "id": "string-escaping-backslash",
+      "description": "String with backslash",
+      "input": {"path": "C:\\Users\\test"},
+      "expected": "{\"path\":\"C:\\\\Users\\\\test\"}"
+    },
+    {
+      "id": "string-escaping-mixed",
+      "description": "String with multiple escape sequences",
+      "input": {"text": "line1\nline2\ttab"},
+      "expected": "{\"text\":\"line1\\nline2\\ttab\"}"
+    },
+    {
+      "id": "unicode-basic",
+      "description": "Basic Unicode (café)",
+      "input": {"text": "café"},
+      "expected": "{\"text\":\"café\"}"
+    },
+    {
+      "id": "unicode-emoji",
+      "description": "Unicode emoji",
+      "input": {"emoji": "👍"},
+      "expected": "{\"emoji\":\"👍\"}"
+    },
+    {
+      "id": "unicode-chinese",
+      "description": "Chinese characters",
+      "input": {"text": "你好"},
+      "expected": "{\"text\":\"你好\"}"
+    },
+    {
+      "id": "unicode-arabic",
+      "description": "Arabic text",
+      "input": {"text": "مرحبا"},
+      "expected": "{\"text\":\"مرحبا\"}"
+    },
+    {
+      "id": "unicode-mixed",
+      "description": "Mixed Unicode scripts",
+      "input": {"text": "Hello 世界 🌍"},
+      "expected": "{\"text\":\"Hello 世界 🌍\"}"
+    },
+    {
+      "id": "key-ordering-numbers",
+      "description": "Keys that look like numbers",
+      "input": {"2": "two", "10": "ten", "1": "one"},
+      "expected": "{\"1\":\"one\",\"10\":\"ten\",\"2\":\"two\"}"
+    },
+    {
+      "id": "key-ordering-mixed-case",
+      "description": "Keys with mixed case (case-sensitive sort)",
+      "input": {"B": 2, "a": 1, "A": 3},
+      "expected": "{\"A\":3,\"B\":2,\"a\":1}"
+    },
+    {
+      "id": "key-ordering-special-chars",
+      "description": "Keys with special characters",
+      "input": {"_private": 1, "$special": 2, "normal": 3},
+      "expected": "{\"$special\":2,\"_private\":1,\"normal\":3}"
+    },
+    {
+      "id": "key-unicode",
+      "description": "Unicode keys",
+      "input": {"日本語": "japanese", "english": "英語"},
+      "expected": "{\"english\":\"英語\",\"日本語\":\"japanese\"}"
+    },
+    {
+      "id": "complex-nested",
+      "description": "Complex nested structure",
+      "input": {
+        "user": {
+          "name": "John",
+          "address": {
+            "city": "NYC",
+            "zip": "10001"
+          }
+        },
+        "items": [
+          {"id": 1, "name": "Item A"},
+          {"id": 2, "name": "Item B"}
+        ]
+      },
+      "expected": "{\"items\":[{\"id\":1,\"name\":\"Item A\"},{\"id\":2,\"name\":\"Item B\"}],\"user\":{\"address\":{\"city\":\"NYC\",\"zip\":\"10001\"},\"name\":\"John\"}}"
+    },
+    {
+      "id": "real-world-profile-update",
+      "description": "Realistic profile update payload",
+      "input": {
+        "name": "John Doe",
+        "email": "john@example.com",
+        "preferences": {
+          "notifications": true,
+          "theme": "dark"
+        }
+      },
+      "expected": "{\"email\":\"john@example.com\",\"name\":\"John Doe\",\"preferences\":{\"notifications\":true,\"theme\":\"dark\"}}"
+    },
+    {
+      "id": "real-world-transfer",
+      "description": "Realistic money transfer payload",
+      "input": {
+        "amount": 100.50,
+        "currency": "USD",
+        "to": "user@example.com",
+        "memo": "Payment"
+      },
+      "expected": "{\"amount\":100.5,\"currency\":\"USD\",\"memo\":\"Payment\",\"to\":\"user@example.com\"}"
+    }
+  ],
+  "reject_vectors": [
+    {
+      "id": "reject-nan",
+      "description": "NaN must be rejected",
+      "reason": "NaN is not a valid JSON value",
+      "note": "Implementation should throw CanonicalizationError"
+    },
+    {
+      "id": "reject-infinity",
+      "description": "Infinity must be rejected",
+      "reason": "Infinity is not a valid JSON value",
+      "note": "Implementation should throw CanonicalizationError"
+    },
+    {
+      "id": "reject-negative-infinity",
+      "description": "Negative Infinity must be rejected",
+      "reason": "-Infinity is not a valid JSON value",
+      "note": "Implementation should throw CanonicalizationError"
+    },
+    {
+      "id": "reject-undefined",
+      "description": "Undefined must be rejected",
+      "reason": "undefined is not a valid JSON value",
+      "note": "Implementation should throw CanonicalizationError"
+    },
+    {
+      "id": "reject-function",
+      "description": "Functions must be rejected",
+      "reason": "Functions cannot be serialized to JSON",
+      "note": "Implementation should throw CanonicalizationError"
+    },
+    {
+      "id": "reject-symbol",
+      "description": "Symbols must be rejected",
+      "reason": "Symbols cannot be serialized to JSON",
+      "note": "Implementation should throw CanonicalizationError"
+    },
+    {
+      "id": "reject-bigint",
+      "description": "BigInt must be rejected",
+      "reason": "BigInt cannot be serialized to JSON",
+      "note": "Implementation should throw CanonicalizationError"
+    }
+  ]
+}

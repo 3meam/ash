@@ -1,0 +1,15 @@
+{
+  "name": "ash-express-demo",
+  "version": "1.0.0",
+  "description": "ASH Protocol Demo - Express.js Server with Tamper & Replay Detection",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@anthropic/ash-core": "file:../../packages/ash-core",
+    "@anthropic/ash-server": "file:../../packages/ash-server",
+    "express": "^4.18.2"
+  }
+}

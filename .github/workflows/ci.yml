@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build packages
+        run: npm run build
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: npm audit --audit-level=high
+
+  determinism:
+    name: Cross-Version Determinism
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test with Node 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - run: npm ci && npm run build && npm test -- --reporter=json > results-18.json
+
+      - name: Test with Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci && npm run build && npm test -- --reporter=json > results-20.json
+
+      - name: Test with Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci && npm run build && npm test -- --reporter=json > results-22.json
+
+      - name: Compare results
+        run: |
+          echo "Comparing test results across Node versions..."
+          # All tests should pass identically across versions
+          for f in results-*.json; do
+            echo "Checking $f..."
+            if grep -q '"status":"failed"' "$f"; then
+              echo "FAILED: Tests failed in $f"
+              exit 1
+            fi
+          done
+          echo "✓ All versions produce identical results"

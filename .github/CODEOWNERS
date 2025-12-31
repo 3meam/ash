@@ -1,33 +1,26 @@
 # ASH Code Owners
-# These owners are automatically requested for review
+# Ash was developed by 3maem Co. | شركة عمائم @ 12/31/2025
+#
+# All changes require approval from @3meam
 
-# Default owners for everything
-* @lead-backend-engineer
+# Default owner for everything - only 3meam can approve
+* @3meam
 
-# Security-critical code requires Security Engineer review
-/ash-core/src/verification.rs @security-engineer @lead-backend-engineer
-/ash-core/src/proof.rs @security-engineer @lead-backend-engineer
-/ash-core/src/threat_tests.rs @security-engineer
+# All packages
+/packages/ @3meam
 
-# Canonicalization requires Deterministic Systems Engineer
-/ash-core/src/canonicalization.rs @deterministic-engineer @lead-backend-engineer
+# Security-critical code
+/packages/ash-core/src/ @3meam
+/packages/ash-server/src/ @3meam
+/packages/ash-client-web/src/ @3meam
 
-# SDK and API changes require DX Engineer
-/ash-node/ @dx-engineer
-/docs/ @dx-engineer @devrel
+# Documentation
+/docs/ @3meam
 
-# Security documentation requires Security Engineer approval
-/SECURITY.md @security-engineer @rnd-lead
-/docs/SECURITY_IMPLEMENTATION_GUIDE.md @security-engineer @rnd-lead
+# CI/CD and workflow changes
+/.github/ @3meam
 
-# Protocol specification requires R&D Lead approval
-/docs/specs/ @rnd-lead
-
-# Test vectors require multiple reviewers
-/docs/vectors/ @deterministic-engineer @test-engineer
-
-# CI/CD and workflow changes require Lead Backend approval
-/.github/workflows/ @lead-backend-engineer @security-engineer
-
-# Architecture decisions require R&D Lead
-/ash-core/Cargo.toml @rnd-lead @lead-backend-engineer
+# Configuration files
+*.json @3meam
+*.yml @3meam
+*.yaml @3meam

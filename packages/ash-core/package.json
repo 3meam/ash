@@ -1,0 +1,38 @@
+{
+  "name": "@anthropic/ash-core",
+  "version": "1.0.0",
+  "description": "ASH Protocol Core - Canonicalization, Proof Generation, and Utilities",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "vitest": "^1.0.0"
+  },
+  "keywords": [
+    "ash",
+    "canonicalization",
+    "integrity",
+    "proof"
+  ],
+  "license": "Proprietary",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/3meam/ash.git",
+    "directory": "packages/ash-core"
+  }
+}

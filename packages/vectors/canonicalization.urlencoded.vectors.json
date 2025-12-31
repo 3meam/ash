@@ -1,0 +1,288 @@
+{
+  "name": "URL-Encoded Canonicalization Test Vectors",
+  "version": "1.0.0",
+  "description": "Test vectors for ASH URL-encoded canonicalization",
+  "specification": "DECISIONS.md Section 5",
+  "rules": {
+    "parsing": "Split on &, then on first =",
+    "decoding": "Percent-decode all values",
+    "keyOrdering": "Lexicographic ascending",
+    "duplicateKeys": "Preserve value order per key",
+    "unicode": "NFC normalization after decode",
+    "output": "Re-encode with encodeURIComponent"
+  },
+  "vectors": [
+    {
+      "id": "empty-string",
+      "description": "Empty input string",
+      "input": "",
+      "expected": ""
+    },
+    {
+      "id": "single-pair",
+      "description": "Single key-value pair",
+      "input": "name=John",
+      "expected": "name=John"
+    },
+    {
+      "id": "two-pairs-sorted",
+      "description": "Two pairs already sorted",
+      "input": "a=1&b=2",
+      "expected": "a=1&b=2"
+    },
+    {
+      "id": "two-pairs-unsorted",
+      "description": "Two pairs requiring sort",
+      "input": "b=2&a=1",
+      "expected": "a=1&b=2"
+    },
+    {
+      "id": "three-pairs-unsorted",
+      "description": "Three pairs requiring sort",
+      "input": "z=3&a=1&m=2",
+      "expected": "a=1&m=2&z=3"
+    },
+    {
+      "id": "duplicate-keys-preserve-order",
+      "description": "Duplicate keys must preserve value order",
+      "input": "a=1&b=2&a=3",
+      "expected": "a=1&a=3&b=2"
+    },
+    {
+      "id": "duplicate-keys-multiple",
+      "description": "Multiple duplicate keys",
+      "input": "z=3&a=1&a=2&b=hello",
+      "expected": "a=1&a=2&b=hello&z=3"
+    },
+    {
+      "id": "duplicate-keys-three-values",
+      "description": "Three values for same key",
+      "input": "x=c&x=a&x=b&y=1",
+      "expected": "x=c&x=a&x=b&y=1"
+    },
+    {
+      "id": "space-plus-encoding",
+      "description": "Space encoded as +",
+      "input": "name=John+Doe",
+      "expected": "name=John%20Doe"
+    },
+    {
+      "id": "space-percent-encoding",
+      "description": "Space encoded as %20",
+      "input": "name=John%20Doe",
+      "expected": "name=John%20Doe"
+    },
+    {
+      "id": "special-chars-encoded",
+      "description": "Special characters already encoded",
+      "input": "query=hello%26world",
+      "expected": "query=hello%26world"
+    },
+    {
+      "id": "unicode-basic",
+      "description": "Basic Unicode (café)",
+      "input": "text=caf%C3%A9",
+      "expected": "text=caf%C3%A9"
+    },
+    {
+      "id": "unicode-emoji",
+      "description": "Unicode emoji",
+      "input": "emoji=%F0%9F%91%8D",
+      "expected": "emoji=%F0%9F%91%8D"
+    },
+    {
+      "id": "unicode-chinese",
+      "description": "Chinese characters",
+      "input": "text=%E4%BD%A0%E5%A5%BD",
+      "expected": "text=%E4%BD%A0%E5%A5%BD"
+    },
+    {
+      "id": "unicode-arabic",
+      "description": "Arabic text",
+      "input": "text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7",
+      "expected": "text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7"
+    },
+    {
+      "id": "empty-value",
+      "description": "Key with empty value",
+      "input": "name=&age=25",
+      "expected": "age=25&name="
+    },
+    {
+      "id": "key-no-equals",
+      "description": "Key without equals sign (value is empty string)",
+      "input": "flag&name=test",
+      "expected": "flag=&name=test"
+    },
+    {
+      "id": "multiple-equals",
+      "description": "Value containing equals sign",
+      "input": "equation=a=b&x=1",
+      "expected": "equation=a%3Db&x=1"
+    },
+    {
+      "id": "key-ordering-numbers",
+      "description": "Keys that look like numbers (string sort)",
+      "input": "2=two&10=ten&1=one",
+      "expected": "1=one&10=ten&2=two"
+    },
+    {
+      "id": "key-ordering-mixed-case",
+      "description": "Keys with mixed case (case-sensitive)",
+      "input": "B=2&a=1&A=3",
+      "expected": "A=3&B=2&a=1"
+    },
+    {
+      "id": "key-ordering-special",
+      "description": "Keys with special characters",
+      "input": "normal=3&_private=1&$special=2",
+      "expected": "%24special=2&_private=1&normal=3"
+    },
+    {
+      "id": "url-unsafe-chars",
+      "description": "URL-unsafe characters in value",
+      "input": "data=%3C%3E%22%27",
+      "expected": "data=%3C%3E%22'"
+    },
+    {
+      "id": "ampersand-in-value",
+      "description": "Ampersand in value (encoded)",
+      "input": "query=foo%26bar&x=1",
+      "expected": "query=foo%26bar&x=1"
+    },
+    {
+      "id": "percent-literal",
+      "description": "Literal percent sign",
+      "input": "discount=50%25off",
+      "expected": "discount=50%25off"
+    },
+    {
+      "id": "newline-in-value",
+      "description": "Newline in value",
+      "input": "text=line1%0Aline2",
+      "expected": "text=line1%0Aline2"
+    },
+    {
+      "id": "tab-in-value",
+      "description": "Tab in value",
+      "input": "text=col1%09col2",
+      "expected": "text=col1%09col2"
+    },
+    {
+      "id": "carriage-return",
+      "description": "Carriage return in value",
+      "input": "text=line1%0D%0Aline2",
+      "expected": "text=line1%0D%0Aline2"
+    },
+    {
+      "id": "real-world-login",
+      "description": "Realistic login form",
+      "input": "password=secret123&username=john%40example.com&remember=true",
+      "expected": "password=secret123&remember=true&username=john%40example.com"
+    },
+    {
+      "id": "real-world-search",
+      "description": "Realistic search query",
+      "input": "sort=desc&q=hello+world&page=1&limit=10",
+      "expected": "limit=10&page=1&q=hello%20world&sort=desc"
+    },
+    {
+      "id": "real-world-filter",
+      "description": "Realistic filter with multiple values",
+      "input": "status=active&tag=javascript&tag=typescript&tag=nodejs",
+      "expected": "status=active&tag=javascript&tag=typescript&tag=nodejs"
+    },
+    {
+      "id": "lowercase-hex",
+      "description": "Lowercase hex encoding (normalize to uppercase)",
+      "input": "text=%c3%a9",
+      "expected": "text=%C3%A9"
+    },
+    {
+      "id": "mixed-case-hex",
+      "description": "Mixed case hex encoding",
+      "input": "text=%C3%a9%c3%A9",
+      "expected": "text=%C3%A9%C3%A9"
+    },
+    {
+      "id": "unreserved-chars",
+      "description": "Unreserved characters should not be encoded",
+      "input": "text=ABCxyz-_.~",
+      "expected": "text=ABCxyz-_.~"
+    },
+    {
+      "id": "slash-in-value",
+      "description": "Forward slash in value",
+      "input": "path=%2Fapi%2Fusers",
+      "expected": "path=%2Fapi%2Fusers"
+    },
+    {
+      "id": "colon-in-value",
+      "description": "Colon in value",
+      "input": "time=10%3A30%3A00",
+      "expected": "time=10%3A30%3A00"
+    },
+    {
+      "id": "brackets-in-value",
+      "description": "Brackets in value (array notation)",
+      "input": "items%5B0%5D=a&items%5B1%5D=b",
+      "expected": "items%5B0%5D=a&items%5B1%5D=b"
+    },
+    {
+      "id": "complex-nested-params",
+      "description": "Complex nested parameter names",
+      "input": "user%5Baddress%5D%5Bcity%5D=NYC&user%5Bname%5D=John",
+      "expected": "user%5Baddress%5D%5Bcity%5D=NYC&user%5Bname%5D=John"
+    },
+    {
+      "id": "null-byte",
+      "description": "Null byte in value",
+      "input": "data=test%00data",
+      "expected": "data=test%00data"
+    },
+    {
+      "id": "all-special-encoded",
+      "description": "All special characters encoded",
+      "input": "chars=%21%23%24%26%27%28%29%2A%2B%2C%2F%3A%3B%3D%3F%40%5B%5D",
+      "expected": "chars=!%23%24%26'()*%2B%2C%2F%3A%3B%3D%3F%40%5B%5D"
+    }
+  ],
+  "edge_cases": [
+    {
+      "id": "leading-ampersand",
+      "description": "Leading ampersand should be ignored",
+      "input": "&a=1&b=2",
+      "expected": "a=1&b=2"
+    },
+    {
+      "id": "trailing-ampersand",
+      "description": "Trailing ampersand should be ignored",
+      "input": "a=1&b=2&",
+      "expected": "a=1&b=2"
+    },
+    {
+      "id": "multiple-ampersands",
+      "description": "Multiple consecutive ampersands",
+      "input": "a=1&&b=2&&&c=3",
+      "expected": "a=1&b=2&c=3"
+    },
+    {
+      "id": "only-ampersands",
+      "description": "String of only ampersands",
+      "input": "&&&",
+      "expected": ""
+    },
+    {
+      "id": "whitespace-in-key",
+      "description": "Whitespace in key name",
+      "input": "my%20key=value",
+      "expected": "my%20key=value"
+    },
+    {
+      "id": "unicode-key",
+      "description": "Unicode characters in key",
+      "input": "%E5%90%8D%E5%89%8D=value&name=test",
+      "expected": "name=test&%E5%90%8D%E5%89%8D=value"
+    }
+  ]
+}

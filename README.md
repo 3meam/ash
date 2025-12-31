@@ -1,17 +1,22 @@
-# ASH - Integrity Protocol Library
+# ASH Protocol - Request Integrity Verification
 
-A deterministic integrity verification protocol library built in Rust.
+**ASH (Authenticity & Stateless Hardening)** is a protocol for verifying HTTP request integrity, preventing tampering and replay attacks.
 
-## Architecture
+## Features
 
-```
-ash-core (Rust)      <- Single source of truth
-|
-├── ash-cli (Rust)         <- Testing / Debug / Demo
-├── ash-wasm (future)      <- Web support
-├── ash-node (bindings)    <- Express / Fastify middleware
-└── docs/vectors           <- Spec + Tests
-```
+- **Tamper Detection** - Cryptographic proof ensures payload integrity
+- **Replay Prevention** - One-time contexts prevent request replay
+- **Framework Support** - Express.js and Fastify middleware included
+- **Browser Compatible** - Web Crypto API support for client-side proof generation
+- **TypeScript First** - Full type definitions included
+
+## Packages
+
+| Package | Description | Size (gzip) |
+|---------|-------------|-------------|
+| [@anthropic/ash-core](./packages/ash-core) | Core canonicalization and proof generation | ~3KB |
+| [@anthropic/ash-server](./packages/ash-server) | Server SDK with context stores and middleware | ~4KB |
+| [@anthropic/ash-client-web](./packages/ash-client-web) | Browser/Node client SDK | <1KB |
 
 ## Core Principles
 
@@ -20,28 +25,91 @@ ash-core (Rust)      <- Single source of truth
 - **Misuse Prevention**: Hard to use incorrectly
 - **Protocol Integrity**: Not auth, but verification
 
-## Project Phase
+## Quick Start
 
-**Current**: ASH Free v1.0 - Web/API
+### Server (Express.js)
 
-## Getting Started
+```typescript
+import express from 'express';
+import { createContext, ashMiddleware, MemoryContextStore } from '@anthropic/ash-server';
 
-```bash
-# Clone the repository
-git clone https://github.com/3meam/ash.git
-cd ash
+const app = express();
+const store = new MemoryContextStore();
 
-# Build core (Rust)
-cd ash-core
-cargo build
+// Issue context endpoint
+app.post('/ash/context', async (req, res) => {
+  const ctx = await createContext(store, {
+    binding: 'POST /api/update',
+    ttlMs: 30000,
+  });
+  res.json(ctx);
+});
+
+// Protected endpoint
+app.post('/api/update',
+  ashMiddleware(store, { expectedBinding: 'POST /api/update' }),
+  (req, res) => res.json({ success: true })
+);
 ```
+
+### Client (Browser)
+
+```typescript
+import { ashFetch } from '@anthropic/ash-client-web';
+
+// Get context from server
+const ctx = await fetch('/ash/context', { method: 'POST' }).then(r => r.json());
+
+// Make protected request
+const response = await ashFetch('/api/update', {
+  context: ctx,
+  payload: { name: 'John' },
+  method: 'POST',
+  path: '/api/update',
+});
+```
+
+## How It Works
+
+1. **Client requests context** from server before making a protected request
+2. **Server issues context** with binding, TTL, and optional nonce
+3. **Client computes proof** = SHA256(version + mode + binding + contextId + [nonce] + payload)
+4. **Client sends request** with context ID and proof in headers
+5. **Server verifies** context validity, binding match, payload integrity
+6. **One-time use** - context cannot be reused (replay prevention)
 
 ## Documentation
 
-- [Team Structure](TEAM.md)
-- [Contributing](CONTRIBUTING.md)
-- [Security Policy](SECURITY.md)
-- [Specifications](docs/specs/)
+- [Quick Start Guide](./docs/QUICKSTART.md)
+- [API Reference](./docs/API-REFERENCE.md)
+- [Security Guide](./docs/SECURITY.md)
+- [Error Codes](./docs/ERROR-CODES.md)
+- [Production Deployment](./docs/PRODUCTION.md)
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Build all packages
+npm run build
+
+# Run tests (180 total)
+npm test
+
+# Run example
+cd examples/express-demo && npm start
+```
+
+## Test Coverage
+
+| Package | Tests |
+|---------|-------|
+| ash-core | 134 |
+| ash-server | 31 |
+| ash-client-web | 15 |
+| **Total** | **180** |
 
 ## License
 

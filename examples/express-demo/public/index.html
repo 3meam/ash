@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASH Protocol Demo</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: 500; }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-warning { background: #ffc107; color: #333; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-primary:hover { background: #0056b3; }
+    .btn-warning:hover { background: #e0a800; }
+    .btn-danger:hover { background: #c82333; }
+    #log {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 13px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .log-success { color: #4ec9b0; }
+    .log-error { color: #f44747; }
+    .log-info { color: #569cd6; }
+    .log-warn { color: #ce9178; }
+    .scenario {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>ASH Protocol Demo</h1>
+  <p>Test request integrity verification with tamper and replay detection.</p>
+
+  <div class="card">
+    <h2>Profile Update Form</h2>
+    <div class="form-group">
+      <label for="name">Name</label>
+      <input type="text" id="name" value="John Doe">
+    </div>
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" value="john@example.com">
+    </div>
+
+    <h3>Test Scenarios</h3>
+    <div class="scenario">
+      <button class="btn-primary" onclick="sendNormalRequest()">
+        Normal Request
+      </button>
+      <button class="btn-warning" onclick="sendTamperedRequest()">
+        Tamper Attack
+      </button>
+      <button class="btn-danger" onclick="sendReplayAttack()">
+        Replay Attack
+      </button>
+      <button onclick="clearLog()">Clear Log</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Request Log</h2>
+    <div id="log"></div>
+  </div>
+
+  <script type="module">
+    // ============================================================
+    // ASH Client Implementation (inline for demo simplicity)
+    // In production, use @anthropic/ash-client-web package
+    // ============================================================
+
+    /**
+     * Canonicalize JSON for deterministic hashing
+     */
+    function canonicalizeJson(value) {
+      if (value === null) return 'null';
+      const type = typeof value;
+      if (type === 'string') return JSON.stringify(value);
+      if (type === 'boolean') return value ? 'true' : 'false';
+      if (type === 'number') return String(value);
+      if (Array.isArray(value)) {
+        return '[' + value.map(v => canonicalizeJson(v)).join(',') + ']';
+      }
+      if (type === 'object') {
+        const keys = Object.keys(value).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+        const pairs = keys.map(k => JSON.stringify(k) + ':' + canonicalizeJson(value[k]));
+        return '{' + pairs.join(',') + '}';
+      }
+      throw new Error('Unsupported type');
+    }
+
+    /**
+     * Build ASH proof using Web Crypto API
+     */
+    async function buildProof(mode, binding, contextId, nonce, canonicalPayload) {
+      let input = `ASHv1\n${mode}\n${binding}\n${contextId}\n`;
+      if (nonce) input += `${nonce}\n`;
+      input += canonicalPayload;
+
+      const encoder = new TextEncoder();
+      const data = encoder.encode(input);
+      const hash = await crypto.subtle.digest('SHA-256', data);
+
+      // Base64URL encode
+      const bytes = new Uint8Array(hash);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    }
+
+    // ============================================================
+    // Demo Functions
+    // ============================================================
+
+    const logEl = document.getElementById('log');
+
+    function log(message, type = 'info') {
+      const time = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.className = `log-${type}`;
+      div.textContent = `[${time}] ${message}`;
+      logEl.appendChild(div);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function clearLog() {
+      logEl.innerHTML = '';
+    }
+
+    // Store last context for replay demo
+    let lastContext = null;
+    let lastProof = null;
+    let lastPayload = null;
+
+    /**
+     * Normal request flow - should succeed
+     */
+    async function sendNormalRequest() {
+      try {
+        log('=== Normal Request ===', 'info');
+
+        // Step 1: Get context from server
+        log('Step 1: Requesting context...', 'info');
+        const ctxRes = await fetch('/ash/context', { method: 'POST' });
+        const context = await ctxRes.json();
+        log(`Context received: ${context.contextId.substring(0, 8)}...`, 'success');
+
+        // Step 2: Prepare payload
+        const payload = {
+          name: document.getElementById('name').value,
+          email: document.getElementById('email').value,
+        };
+        log(`Payload: ${JSON.stringify(payload)}`, 'info');
+
+        // Step 3: Canonicalize and build proof
+        const canonical = canonicalizeJson(payload);
+        const binding = 'POST /api/profile/update';
+        const proof = await buildProof(
+          context.mode,
+          binding,
+          context.contextId,
+          context.nonce,
+          canonical
+        );
+        log(`Proof computed: ${proof.substring(0, 16)}...`, 'info');
+
+        // Save for replay demo
+        lastContext = context;
+        lastProof = proof;
+        lastPayload = payload;
+
+        // Step 4: Send protected request
+        log('Step 4: Sending protected request...', 'info');
+        const res = await fetch('/api/profile/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-ASH-Context-Id': context.contextId,
+            'X-ASH-Proof': proof,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+          log(`SUCCESS: ${result.message}`, 'success');
+        } else {
+          log(`REJECTED: ${result.error.code} - ${result.error.message}`, 'error');
+        }
+      } catch (err) {
+        log(`ERROR: ${err.message}`, 'error');
+      }
+    }
+
+    /**
+     * Tamper attack - modify payload after proof is computed
+     */
+    async function sendTamperedRequest() {
+      try {
+        log('=== Tamper Attack Demo ===', 'warn');
+
+        // Get context
+        log('Getting context...', 'info');
+        const ctxRes = await fetch('/ash/context', { method: 'POST' });
+        const context = await ctxRes.json();
+
+        // Original payload
+        const originalPayload = {
+          name: document.getElementById('name').value,
+          email: document.getElementById('email').value,
+        };
+        log(`Original payload: ${JSON.stringify(originalPayload)}`, 'info');
+
+        // Compute proof with ORIGINAL payload
+        const canonical = canonicalizeJson(originalPayload);
+        const proof = await buildProof(
+          context.mode,
+          'POST /api/profile/update',
+          context.contextId,
+          context.nonce,
+          canonical
+        );
+        log(`Proof computed with original data`, 'info');
+
+        // ATTACK: Modify payload after proof is computed!
+        const tamperedPayload = {
+          name: 'ATTACKER',
+          email: 'attacker@evil.com',
+        };
+        log(`TAMPERED payload: ${JSON.stringify(tamperedPayload)}`, 'warn');
+
+        // Send with tampered payload (proof won't match)
+        log('Sending tampered request...', 'warn');
+        const res = await fetch('/api/profile/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-ASH-Context-Id': context.contextId,
+            'X-ASH-Proof': proof,
+          },
+          body: JSON.stringify(tamperedPayload), // <-- Different from what proof covers!
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+          log(`WARNING: Attack succeeded (should not happen!)`, 'error');
+        } else {
+          log(`BLOCKED: ${result.error.code} - Server detected tampering!`, 'success');
+        }
+      } catch (err) {
+        log(`ERROR: ${err.message}`, 'error');
+      }
+    }
+
+    /**
+     * Replay attack - reuse a previous valid request
+     */
+    async function sendReplayAttack() {
+      try {
+        log('=== Replay Attack Demo ===', 'warn');
+
+        if (!lastContext || !lastProof) {
+          log('Please send a normal request first to have something to replay', 'error');
+          return;
+        }
+
+        log(`Replaying context: ${lastContext.contextId.substring(0, 8)}...`, 'info');
+        log(`Using same proof from previous request`, 'warn');
+
+        // Send the EXACT same request again
+        const res = await fetch('/api/profile/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-ASH-Context-Id': lastContext.contextId,
+            'X-ASH-Proof': lastProof,
+          },
+          body: JSON.stringify(lastPayload),
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+          log(`WARNING: Replay succeeded (should not happen!)`, 'error');
+        } else {
+          log(`BLOCKED: ${result.error.code} - Server detected replay!`, 'success');
+        }
+      } catch (err) {
+        log(`ERROR: ${err.message}`, 'error');
+      }
+    }
+
+    // Expose functions globally for button onclick handlers
+    window.sendNormalRequest = sendNormalRequest;
+    window.sendTamperedRequest = sendTamperedRequest;
+    window.sendReplayAttack = sendReplayAttack;
+    window.clearLog = clearLog;
+
+    // Initial log
+    log('ASH Protocol Demo loaded. Click a button to test.', 'info');
+  </script>
+</body>
+</html>
